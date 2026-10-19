@@ -1,0 +1,246 @@
+@import "tailwindcss";
+
+/* ── theme tokens: every component reads the same variables, so flipping
+      html.dark switches the whole app instantly ─────────────────────────── */
+:root {
+  --tg-bg: #e6ebee;
+  --tg-panel: #ffffff;
+  --tg-hover: rgba(15, 30, 45, 0.06);
+  --tg-active: #d3e3f5;
+  --tg-out: #effdde;
+  --tg-in: #ffffff;
+  --tg-text: #0f1419;
+  --tg-out-text: #111827;
+  --tg-out-meta: #4fae4e;
+  --tg-quote-out: rgba(17, 24, 39, 0.07);
+  --tg-quote-in: rgba(15, 23, 42, 0.05);
+  --tg-muted: #707579;
+  --tg-line: rgba(15, 30, 45, 0.12);
+  --tg-input: #ffffff;
+  --tg-accent: #3390ec;
+  --tg-green: #4fb05a;
+  --tg-on-accent: #ffffff;
+  --chat-font-size: 15px;
+  --chat-line: 1.35;
+}
+
+html.dark {
+  --tg-bg: #17212b;
+  --tg-panel: #232e3c;
+  --tg-hover: #202b36;
+  --tg-active: #2b5278;
+  --tg-out: #2b5278;
+  --tg-in: #232e3c;
+  --tg-text: #ffffff;
+  --tg-out-text: #f8fafc;
+  --tg-out-meta: rgba(255, 255, 255, 0.65);
+  --tg-quote-out: rgba(255, 255, 255, 0.1);
+  --tg-quote-in: rgba(0, 0, 0, 0.25);
+  --tg-muted: #8b95a1;
+  --tg-line: #101921;
+  --tg-input: #242f3d;
+  --tg-accent: #5795f2;
+  --tg-green: #64c15d;
+  --tg-on-accent: #ffffff;
+}
+
+@theme inline {
+  --text-msg: var(--chat-font-size);
+  --color-tg-bg: var(--tg-bg);
+  --color-tg-panel: var(--tg-panel);
+  --color-tg-hover: var(--tg-hover);
+  --color-tg-active: var(--tg-active);
+  --color-tg-out: var(--tg-out);
+  --color-tg-in: var(--tg-in);
+  --color-tg-text: var(--tg-text);
+  --color-tg-out-text: var(--tg-out-text);
+  --color-tg-out-meta: var(--tg-out-meta);
+  --color-tg-quote-out: var(--tg-quote-out);
+  --color-tg-quote-in: var(--tg-quote-in);
+  --color-tg-muted: var(--tg-muted);
+  --color-tg-line: var(--tg-line);
+  --color-tg-input: var(--tg-input);
+  --color-tg-accent: var(--tg-accent);
+  --color-tg-green: var(--tg-green);
+  --color-tg-on-accent: var(--tg-on-accent);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+body,
+#root {
+  background: var(--tg-bg);
+  color: var(--tg-text);
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+/* Native app feel: no text selection, no native callout menus */
+*,
+*::before,
+*::after {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Only the message list scrolls; the page itself never does */
+body {
+  overflow: hidden;
+  touch-action: manipulation;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.35);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@keyframes tg-pop {
+  from {
+    transform: scale(0.94);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.animate-pop {
+  animation: tg-pop 0.16s ease-out;
+}
+
+@keyframes tg-toast {
+  from {
+    transform: translateY(14px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.animate-toast {
+  animation: tg-toast 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+@keyframes tg-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+.typing-dot {
+  animation: tg-dot 1.2s infinite;
+}
+.typing-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.typing-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+/* 1.5s highlight pulse when jumping to a message */
+@keyframes tg-flash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(87, 149, 242, 0.9);
+    background-color: rgba(87, 149, 242, 0.28);
+  }
+  70% {
+    background-color: rgba(87, 149, 242, 0.22);
+  }
+  100% {
+    box-shadow: 0 0 0 14px rgba(87, 149, 242, 0);
+    background-color: transparent;
+  }
+}
+.msg-flash {
+  animation: tg-flash 1.5s ease-out;
+  border-radius: 14px;
+}
+
+/* Swipe affordance */
+.msg-swiping {
+  transition: transform 0.12s ease-out;
+}
+
+/* ── global chat font size (Settings › حجم الخط) ────────────────────────────
+   --chat-font-size is written on <html> by the store, so every bubble, the
+   composer input and the preview update instantly across all chats.          */
+.msg-text {
+  font-size: var(--chat-font-size);
+  line-height: var(--chat-line);
+}
+
+.msg-input {
+  font-size: var(--chat-font-size);
+  line-height: var(--chat-line);
+}
+
+/* native slider styling so the zoom control works in every browser */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(128, 128, 128, 0.3);
+}
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(128, 128, 128, 0.3);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -5px;
+  height: 16px;
+  width: 16px;
+  border-radius: 999px;
+  background: var(--tg-accent);
+  border: 2px solid var(--tg-panel);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+input[type="range"]::-moz-range-thumb {
+  height: 16px;
+  width: 16px;
+  border-radius: 999px;
+  background: var(--tg-accent);
+  border: 2px solid var(--tg-panel);
+}
+
+/* colour inputs render as a clean swatch everywhere */
+input[type="color"] {
+  border: 1px solid rgba(128, 128, 128, 0.35);
+  padding: 2px;
+}
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 8px;
+}

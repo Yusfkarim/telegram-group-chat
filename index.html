@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+    <title>تعافي من الإدمان · Recovery</title>
+    <meta name="theme-color" content="#17212b" />
+    <script>
+      /* Boot watchdog: if the app bundle fails to load (stale HTML → 404 asset),
+         show a recovery screen instead of a blank page. */
+      (function () {
+        var mounted = false;
+        window.__APP_BOOTED__ = function () { mounted = true; };
+        function recover(title, msg) {
+          if (mounted || document.getElementById("boot-screen")) return;
+          var d = document.createElement("div");
+          d.id = "boot-screen";
+          d.setAttribute("style", "position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;background:#17212b;color:#fff;font-family:system-ui,sans-serif;z-index:9999");
+          d.innerHTML =
+            '<div style="max-width:380px;width:100%;background:#232e3c;border-radius:22px;padding:28px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4)">' +
+            '<div style="font-size:34px;margin-bottom:12px">⚠️</div>' +
+            '<h2 style="margin:0 0 8px;font-size:18px">' + title + "</h2>" +
+            '<p style="margin:0 0 18px;color:#8b95a1;font-size:14px;line-height:1.7">' + msg + "</p>" +
+            '<button id="boot-reload" style="width:100%;border:0;border-radius:14px;background:#5795f2;color:#fff;font-weight:700;font-size:15px;padding:14px;cursor:pointer">' +
+            (document.documentElement.lang === "ar" ? "تحديث الصفحة" : "Reload page") +
+            "</button>" +
+            '<button id="boot-reset" style="width:100%;margin-top:8px;border:0;border-radius:14px;background:rgba(255,255,255,.1);color:#fff;font-weight:600;font-size:14px;padding:12px;cursor:pointer">' +
+            (document.documentElement.lang === "ar" ? "مسح البيانات وإعادة البدء" : "Reset data & start over") +
+            "</button></div>";
+          document.body.appendChild(d);
+          document.getElementById("boot-reload").onclick = function () { location.reload(true); };
+          document.getElementById("boot-reset").onclick = function () {
+            try { localStorage.clear(); sessionStorage.clear(); } catch (e) {}
+            location.replace(location.pathname);
+          };
+        }
+        window.addEventListener("error", function (e) {
+          if (e.target && e.target.tagName === "SCRIPT") {
+            recover("فشل تحميل التطبيق", "الصفحة تحمّل نسخة قديمة من الملفات. اضغط «تحديث الصفحة» لتحميل النسخة الأخيرة.");
+          }
+        }, true);
+        window.__BOOT_RECOVER__ = recover;
+        setTimeout(function () {
+          if (!mounted) {
+            recover("لم يتم تحميل التطبيق", "جرّب تحديث الصفحة، وإن استمرت المشكلة امسح بيانات الموقع من إعدادات المتصفح.");
+          }
+        }, 4000);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,18 @@
+import { chromium } from "playwright";
+const URL = process.env.TEST_URL || "http://127.0.0.1:4173";
+const b = await chromium.launch({ args: ["--no-sandbox"] });
+const p1 = await b.newPage();
+await p1.goto(URL, { waitUntil: "networkidle" });
+await p1.waitForTimeout(1200);
+console.log("normal boot -> recovery shown:", (await p1.locator("#boot-screen").count()) > 0 ? "FAIL" : "OK");
+await p1.close();
+const p2 = await b.newPage();
+await p2.route("**/assets/index-*.js", (r) => r.abort());
+await p2.goto(URL, { waitUntil: "domcontentloaded" });
+await p2.waitForTimeout(6000);
+const has = await p2.locator("#boot-screen").count();
+console.log("blocked asset -> recovery shown:", has ? "OK" : "FAIL");
+console.log("  buttons present:", (await p2.locator("#boot-reload").count()) && (await p2.locator("#boot-reset").count()) ? "OK" : "FAIL");
+if (has) console.log("  text:", (await p2.locator("#boot-screen").innerText()).slice(0, 60).replace(/\n/g, " | "));
+await p2.close();
+await b.close();

@@ -1,0 +1,16 @@
+import { chromium } from "playwright";
+const b = await chromium.launch({ args: ["--no-sandbox"] });
+const p = await b.newPage({ viewport: { width: 1100, height: 900 } });
+p.setDefaultTimeout(9000);
+await p.goto("http://127.0.0.1:4173/?invite=design-2026x", { waitUntil: "networkidle" });
+await p.evaluate(() => localStorage.clear());
+await p.goto("http://127.0.0.1:4173/?invite=design-2026x", { waitUntil: "networkidle" });
+await p.waitForTimeout(1000);
+await p.locator("input").first().fill("زائر");
+await p.locator("button", { hasText: /^متابعة$/ }).click();
+await p.waitForTimeout(1800);
+const t = await p.locator("body").innerText();
+const tail = t.slice(-300).split("\n").join(" | ");
+process.stdout.write("MODAL TAIL: " + tail + "\n");
+process.stdout.write("CTA count: " + (await p.locator("button", { hasText: /طلب انضمام/ }).count()) + "\n");
+await b.close();
