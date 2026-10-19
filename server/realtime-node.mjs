@@ -59,8 +59,12 @@ const server = createServer(async (req, res) => {
 
   if (url.pathname === "/api/state") {
     if (req.method === "GET") {
-      const fingerprint = JSON.stringify(snap.chats) + "|" + JSON.stringify(snap.typing);
-      if (fingerprint === snapFingerprint) {
+      const fingerprint = JSON.stringify(snap.chats) + "|" + JSON.stringify(snap.typing) + "|" + snap.rev;
+      // honour the client's fingerprint — an unchanged world is 60 bytes, not megabytes
+      if (req.headers["x-tgc-fp"] && req.headers["x-tgc-fp"] === fingerprint) {
+        res.writeHead(200, { "content-type": "application/json", "x-cache": "same" });
+        res.end(JSON.stringify({ tag: TAG, rev: snap.rev, same: true }));
+      } else if (fingerprint === snapFingerprint) {
         res.writeHead(200, { "content-type": "application/json", "x-cache": "same" });
         res.end(JSON.stringify(snap));
       } else {

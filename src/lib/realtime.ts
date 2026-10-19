@@ -9,6 +9,10 @@ export const SNAPSHOT_TAG = "tgc-live-v1" as const;
 export const TYPING_TTL = 2600;
 /** poll cadence for everything except typing */
 export const POLL_MS = 1250;
+/** when a poll finds nothing new, the next wait doubles — up to this ceiling */
+export const POLL_MAX_IDLE_MS = 8000;
+/** background-tab cadence — no human is watching, be frugal */
+export const POLL_HIDDEN_MS = 12000;
 /** minimum gap between flushes (debounce) */
 export const FLUSH_DEBOUNCE_MS = 220;
 /** typing bumps flush faster so feels live */
@@ -102,6 +106,7 @@ export function startSync(endpoint: string): () => void {
 
   const scheduleFlush = (typingBoost = false) => {
     if (stopped) return;
+    idleGrowth = 1; // activity means the world may change soon — poll fast again
     if (pendingFlush !== undefined) {
       if (!typingBoost) return;
       window.clearTimeout(pendingFlush);
@@ -163,6 +168,7 @@ export function startSync(endpoint: string): () => void {
   };
 
   let lastFp = "";
+  let idleGrowth = 1;
 
   const poll = async () => {
     if (stopped) return;
@@ -170,8 +176,10 @@ export function startSync(endpoint: string): () => void {
       const res = await fetch(`${endpoint}/state`, { headers: { accept: "application/json", ...(lastFp ? { "x-tgc-fp": lastFp } : {}) } });
       const fresh = (await res.json().catch(() => null)) as LiveSnapshot | { tag: string; rev: number; same: true } | null;
       if (fresh && "same" in fresh && fresh.same) {
-        /* nothing new */
+        // nothing new — stretch mildly (visible tabs stay snappy; hidden tabs are already frugal)
+        idleGrowth = Math.min(idleGrowth * 2, 2);
       } else if (fresh && fresh.tag === SNAPSHOT_TAG) {
+        idleGrowth = 1;
         lastFp = snapFingerprint(fresh as LiveSnapshot);
         const s = getState();
         // a client with an empty local world ignores the server's other rooms until it flushes once
@@ -184,7 +192,10 @@ export function startSync(endpoint: string): () => void {
     } catch {
       /* offline */
     } finally {
-      if (!stopped) timer = window.setTimeout(poll, POLL_MS);
+      if (!stopped) {
+        const cadence = document.visibilityState === "visible" ? POLL_MS * idleGrowth : POLL_HIDDEN_MS;
+        timer = window.setTimeout(poll, cadence);
+      }
     }
   };
 
@@ -197,6 +208,7 @@ export function startSync(endpoint: string): () => void {
   });
   const onVis = () => {
     if (document.visibilityState === "visible") {
+      idleGrowth = 1; // returning to the tab deserves instant freshness
       window.clearTimeout(timer);
       void poll();
     }
